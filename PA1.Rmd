@@ -45,3 +45,5 @@ temp <- unz(paste(datadir, "/", datafilename, sep=""), "activity.csv")
 df <- read.csv(temp)
 df$day <- weekdays(as.Date(df$date))
 df$wdays <- with(df, ifelse(df$day %in% wDays, "weekday", "weekend"))
+
+meanStepsPerDay <- aggregate(df[,c('steps')], by=list(as.Date(df$date)), FUN=mean, na.rm=FALSE)
