@@ -1,0 +1,47 @@
+---
+title: "Reproducible Research: Peer Assessment 1"
+output: 
+  html_document:
+    keep_md: true
+---
+
+
+## Loading and preprocessing the data
+
+
+
+## What is mean total number of steps taken per day?
+
+
+
+## What is the average daily activity pattern?
+
+
+
+## Imputing missing values
+
+
+
+## Are there differences in activity patterns between weekdays and weekends?
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Sys.setlocale(locale="en_US.UTF-8")
+datadir <- "data"
+datafilename <- "activity.zip"
+datasource <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip"
+wDays <- c('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday')
+
+if (file.exists(datadir)){
+} else {
+    dir.create(file.path(datadir))
+}
+
+download.file(datasource, paste(datadir, "/", datafilename, sep=""), mode="wb")
+
+temp <- unz(paste(datadir, "/", datafilename, sep=""), "activity.csv")
+df <- read.csv(temp)
+df$day <- weekdays(as.Date(df$date))
+df$wdays <- with(df, ifelse(df$day %in% wDays, "weekday", "weekend"))
