@@ -1,3 +1,5 @@
+library(ggplot2)
+
 Sys.setlocale("LC_ALL","English")
 datadir <- "data"
 datafilename <- "activity.zip"
@@ -17,3 +19,6 @@ df$day <- weekdays(as.Date(df$date))
 df$wdays <- with(df, ifelse(df$day %in% wDays, "weekday", "weekend"))
 
 meanStepsPerDay <- aggregate(df[,c('steps')], by=list(as.Date(df$date)), FUN=mean, na.rm=FALSE)
+meanStepsPerDay$day <- weekdays(as.Date(meanStepsPerDay$Group.1))
+
+ggplot(data=meanStepsPerDay, aes(x=Group.1, y=x, group=1)) + geom_line() + scale_x_date(date_breaks = "1 weeks")
