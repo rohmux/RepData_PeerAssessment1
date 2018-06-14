@@ -31,9 +31,6 @@ medianStepsPerDay <- aggregate(df[,c('steps')], by=list(df$day), FUN=median, na.
 
 meanStepsPerInterval <- aggregate(df[,c('steps')], by=list(df$interval), FUN=mean, na.rm=TRUE)
 
-maxStepsPerIntervalPerDay <- aggregate(df[,c('interval')], by=list(df$steps), FUN=max, na.rm=TRUE)
-
-
 ggplot(data=meanStepsPerInterval, aes(x=Group.1, y=x, group=1)) + geom_line()
 
 
