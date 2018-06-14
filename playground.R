@@ -1,14 +1,3 @@
----
-title: 'Reproducible Research: Peer Assessment 1'
-output:
-  pdf_document: default
-  html_document:
-    keep_md: yes
----
-
-
-## Loading and preprocessing the data
-```{r}
 Sys.setlocale("LC_ALL","English")
 datadir <- "data"
 datafilename <- "activity.zip"
@@ -17,7 +6,7 @@ wDays <- c('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday')
 
 if (file.exists(datadir)){
 } else {
-    dir.create(file.path(datadir))
+  dir.create(file.path(datadir))
 }
 
 download.file(datasource, paste(datadir, "/", datafilename, sep=""), mode="wb")
@@ -26,23 +15,5 @@ temp <- unz(paste(datadir, "/", datafilename, sep=""), "activity.csv")
 df <- read.csv(temp)
 df$day <- weekdays(as.Date(df$date))
 df$wdays <- with(df, ifelse(df$day %in% wDays, "weekday", "weekend"))
-```
 
-## What is mean total number of steps taken per day?
-```{r}
 meanStepsPerDay <- aggregate(df[,c('steps')], by=list(as.Date(df$date)), FUN=mean, na.rm=FALSE)
-```
-
-## What is the average daily activity pattern?
-
-
-
-## Imputing missing values
-
-
-
-## Are there differences in activity patterns between weekdays and weekends?
-
-
-
-
