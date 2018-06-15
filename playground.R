@@ -20,6 +20,8 @@ df <- read.csv(temp)
 timeString <- sprintf("%04d", df$interval, df$interval)
 df$datetime <- as.POSIXct(paste(df$date, " ", substr(timeString, 0, 2), ":", substr(timeString, 3, 4), sep=""))
 df$interval <- paste(substr(timeString, 0, 2), ":", substr(timeString, 3, 4), sep="")
+
+
 df$day <- weekdays(as.Date(df$date))
 df$wdays <- with(df, ifelse(df$day %in% wDays, "weekday", "weekend"))
 

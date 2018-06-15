@@ -1,37 +1,100 @@
 ---
 title: 'Reproducible Research: Peer Assessment 1'
 output:
-  pdf_document: default
   html_document:
     keep_md: yes
+  pdf_document: default
 ---
 
 
 ## Loading and preprocessing the data
+### Preparing the Environment
+This script has been created on a macOS High Sierra machine (64-bit). RStudio runs on version 1.1.453 and R on version 3.3.2 (64-bit).
+First i'm gonna make sure, that your machine uses the same language setting as there could be problems when running the script (especially when dealing with Weekdays). If you're on a windows machine, replace "en_US.UTF-8" with "English", Linux should work ok.
 ```{r}
-Sys.setlocale("LC_ALL","English")
-datadir <- "data"
+Sys.setlocale("LC_ALL","en_US.UTF-8")
+Sys.setenv(TZ="Europe/Zurich")
+```
+
+I had also the need to set the timezone to avoid error messages (i think this can be adapted to your needs).
+```{r}
+Sys.setenv(TZ="Europe/Zurich")
+```
+I asume you already installed 'ggplot2' otherwise install it with 'install.packages("ggplot2")' and load it with.
+```{r}
+library(ggplot2)
+```
+
+### Loading the data
+Now the environment should be ready for the rest of the script and we can start downloading the data from the internet using this Chunk.
+```{r}
 datafilename <- "activity.zip"
 datasource <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip"
-wDays <- c('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday')
-
-if (file.exists(datadir)){
-} else {
-    dir.create(file.path(datadir))
-}
-
-download.file(datasource, paste(datadir, "/", datafilename, sep=""), mode="wb")
-
-temp <- unz(paste(datadir, "/", datafilename, sep=""), "activity.csv")
-df <- read.csv(temp)
-df$day <- weekdays(as.Date(df$date))
-df$wdays <- with(df, ifelse(df$day %in% wDays, "weekday", "weekend"))
+download.file(datasource, datafilename, mode="wb")
 ```
+
+This will download the activity.zip file into the working directory. The url used is stored in the variable datasource.
+While the file is zipped, it will be unzipped in a variable called temp and then read with the 'read.csv()' function in a data frame named 'df'
+```{r}
+temp <- unz(datafilename, "activity.csv")
+df <- read.csv(temp)
+```
+
+### Preprocessing the data
+Looking at the content of the data set, one can see, that the intervalls are an abreviation of an hour format that only shows the needed numbers (e.g. 5 means 00:05 and 435 means 04:35), thats why i will modify the format of the intervall like this "hh:mm" for better reading and handling.
+First store the intervall in the new format in a variable called timeString
+```{r}
+timeString <- sprintf("%04d", df$interval, df$interval)
+```
+
+Now this timeString can be used for the replacement of the content of the given 'interval' column with this new 'timeString' content.
+```{r}
+df$interval <- paste(substr(timeString, 0, 2), ":", substr(timeString, 3, 4), sep="")
+```
+
+For better handling with the day names (put them in the correct order) i create another data frame 'addDays' containing all week days and the number of the week day (i start with monday).
+```{r}
+allDays <- data.frame(day = c('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'), dayNumber = c(1,2,3,4,5,6,7))
+```
+
+Now the data set is ready for the research.
 
 ## What is mean total number of steps taken per day?
+
+Getting the total number of steps taken per day is achieved using this code to store it as a data frame in the variable calles 'sumStepsPerDay', be aware of the 'na.rm=TRUE'.
 ```{r}
-meanStepsPerDay <- aggregate(df[,c('steps')], by=list(as.Date(df$date)), FUN=mean, na.rm=FALSE)
+sumStepsPerDay <- aggregate(df[,c('steps')], by=list(df$date), FUN=sum, na.rm=TRUE)
 ```
+
+And visualize a histogram with following chunk.
+```{r}
+qplot(sumStepsPerDay$x, xlab = "Steps per Day", ylab = "Count", main = "Histogramm of Steps taken per Day", bins= "20")
+```
+
+To calculate the mean of the total number of steps taken per day we must first add a 'day' column to the 'sumStepsPerDay' data frame for proper grouping.
+```{r}
+sumStepsPerDay$day <- weekdays(as.Date(sumStepsPerDay$Group.1))
+```
+
+Now we are ready to calculate the median of the total number of steps taken per day. First store the 'mean' in the variable 'meanStepsPerDay'.
+```{r}
+meanStepsPerDay <- aggregate(sumStepsPerDay[,c('x')], by=list(sumStepsPerDay$day), FUN=mean, na.rm=TRUE)
+```
+
+Now merge the data frame with 'allDays' to allow correct ordering of the ouput and display the result.
+```{r}
+meanStepsPerDay <- merge(meanStepsPerDay, allDays, by.x = "Group.1", by.y = "day")
+meanStepsPerDay[order(meanStepsPerDay$day),][,1:2]
+```
+
+and changing the 'FUN' from 'mean' to 'median' will give us the median of the total number of steps taken per day. Store it in the variable medianStepsPerDay and do the same processing for odering (also see the 'mean' part)
+```{r}
+medianStepsPerDay <- aggregate(sumStepsPerDay[,c('x')], by=list(sumStepsPerDay$day), FUN=median, na.rm=TRUE)
+medianStepsPerDay <- merge(medianStepsPerDay, allDays, by.x = "Group.1", by.y = "day")
+medianStepsPerDay[order(medianStepsPerDay$day),][,1:2]
+```
+
+The 'x' column in both stands for the 'mean' or 'median' and the 'Group.1' obviously for the day.
 
 ## What is the average daily activity pattern?
 
@@ -42,7 +105,4 @@ meanStepsPerDay <- aggregate(df[,c('steps')], by=list(as.Date(df$date)), FUN=mea
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
-
-
-
 
