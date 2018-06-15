@@ -98,11 +98,75 @@ The 'x' column in both stands for the 'mean' or 'median' and the 'Group.1' obvio
 
 ## What is the average daily activity pattern?
 
+To visualize the average daily activity pattern i first store the mean of all steps per interval in a data frame named 'meanStepsPerInterval'. For better a better visual experience, store the ticks of the x-axis in a variable calles 'ticks'. It contains all 24th entries from 'df$interval' which means a tick every second hour.
+```{r}
+meanStepsPerInterval <- aggregate(df[,c('steps')], by=list(df$interval), FUN=mean, na.rm=TRUE)
+ticks <- meanStepsPerInterval[seq(1, nrow(meanStepsPerInterval), 24),][,1]
+```
 
+After creating the ticks it is easy to build the time series plot with ggplot2.
+```{r}
+ggplot(data=meanStepsPerInterval, aes(x=Group.1, y=x, group=1)) + geom_line() + scale_x_discrete(breaks = c(ticks))
+```
 
-## Imputing missing values
+To find out what interval has the highest mean of steps use following code:
+```{r}
+highestInterval <- meanStepsPerInterval[ meanStepsPerInterval$x == max(meanStepsPerInterval$x),]
+highestInterval
+```
 
+## Inputing missing values
+First lets find out how many NAs are in the original data set.
+```{r}
+sum(is.na(df$steps))
+```
+
+Now we can continue and replacing the NAs after creating a copy of the original data set, so both are available for comparison. I will take the mean steps of the intervalls from all days.
+```{r}
+dfNoNA <- df
+dfNoNA$steps <- with(dfNoNA, ifelse(is.na(dfNoNA$steps), aggregate(dfNoNA[,c('steps')], by=list(dfNoNA$interval), FUN=mean, na.rm=TRUE)[,2], df[,1]))
+```
+
+Now create the histogram and calculating the mean and medians like before but this time using the data set with replaced NAs. I use the same variable names and just add 'NoNA'. But first the histogram.
+```{r}
+sumStepsPerDayNoNA <- aggregate(dfNoNA[,c('steps')], by=list(dfNoNA$date), FUN=sum)
+qplot(sumStepsPerDayNoNA$x, xlab = "Steps per Day", ylab = "Count", main = "Histogramm of Steps taken per Day", bins= "20")
+```
+
+Adding again the day names for proper grouping.
+```{r}
+sumStepsPerDayNoNA$day <- weekdays(as.Date(sumStepsPerDayNoNA$Group.1))
+```
+
+and finally calculate means.
+```{r}
+meanStepsPerDayNoNA <- aggregate(sumStepsPerDayNoNA[,c('x')], by=list(sumStepsPerDayNoNA$day), FUN=mean)
+meanStepsPerDayNoNA <- merge(meanStepsPerDayNoNA, allDays, by.x = "Group.1", by.y = "day")
+meanStepsPerDayNoNA[order(meanStepsPerDayNoNA$day),][,1:2]
+```
+
+and the medians
+```{r}
+medianStepsPerDayNoNA <- aggregate(sumStepsPerDayNoNA[,c('x')], by=list(sumStepsPerDayNoNA$day), FUN=mean)
+medianStepsPerDayNoNA <- merge(medianStepsPerDayNoNA, allDays, by.x = "Group.1", by.y = "day")
+medianStepsPerDayNoNA[order(medianStepsPerDayNoNA$day),][,1:2]
+```
+
+We see, when we compare the results from the data set with NAs and the data set where the NAs are replaced with the means, it gives us higher values overall when the NAs are replaced by mean values.
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
 
+For this question we first need to add a column that tells if the measures are on a weekday or weekend.
+Lets store the weekdays in the variable 'wDays'.
+```{r}
+wDays <- c('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday')
+```
+
+Now use 'wDays' to determine if a measure of the dataset 'sumStepsPerDayNoNA' is on a weekend or on a weekday and add this with a new column 'wDay'.
+
+```{r}
+meanStepsPerIntervalNoNA <- aggregate(dfNoNA[,c('steps')], by=list(dfNoNA$interval), FUN=mean, na.rm=TRUE)
+ticks <- meanStepsPerIntervalNoNA[seq(1, nrow(meanStepsPerIntervalNoNA), 24),][,1]
+sumStepsPerDayNoNA$wDay <- with(df, ifelse(sumStepsPerDay$day %in% wDays, "weekday", "weekend"))
+```
