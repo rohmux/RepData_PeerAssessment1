@@ -1,9 +1,10 @@
 ---
 title: 'Reproducible Research: Peer Assessment 1'
+author: 'Reto Omlin'
+date: 17. June 2018
 output:
   html_document:
     keep_md: yes
-  pdf_document: default
 ---
 
 
@@ -163,10 +164,28 @@ Lets store the weekdays in the variable 'wDays'.
 wDays <- c('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday')
 ```
 
-Now use 'wDays' to determine if a measure of the dataset 'sumStepsPerDayNoNA' is on a weekend or on a weekday and add this with a new column 'wDay'.
-
+Now first i add the 'day' column to the 'dfNoNA' witch determines the day name according the date.
+Adding the 'wday' variable to the 'dfNoNA' will tell us, if this day is a weekday or on a weekend.
 ```{r}
-meanStepsPerIntervalNoNA <- aggregate(dfNoNA[,c('steps')], by=list(dfNoNA$interval), FUN=mean, na.rm=TRUE)
-ticks <- meanStepsPerIntervalNoNA[seq(1, nrow(meanStepsPerIntervalNoNA), 24),][,1]
-sumStepsPerDayNoNA$wDay <- with(df, ifelse(sumStepsPerDay$day %in% wDays, "weekday", "weekend"))
+dfNoNA$day <- weekdays(as.Date(dfNoNA$date))
+dfNoNA$wDay <- with(dfNoNA, ifelse(dfNoNA$day %in% wDays, "weekday", "weekend"))
+```
+
+So we can use this to create two variables named 'meanStepsPerIntervalNoNAwd' and 'meanStepsPerIntervalNoNAwe' (wd for weekday and we for weekend).
+```{r}
+meanStepsPerIntervalNoNAwd <- aggregate(subset(dfNoNA, wDay == 'weekday')[,c('steps')], by=list(subset(dfNoNA, wDay == 'weekday')$interval), FUN=mean)
+meanStepsPerIntervalNoNAwd$wDay <- 'weekday'
+meanStepsPerIntervalNoNAwe <- aggregate(subset(dfNoNA, wDay == 'weekend')[,c('steps')], by=list(subset(dfNoNA, wDay == 'weekend')$interval), FUN=mean)
+meanStepsPerIntervalNoNAwe$wDay <- 'weekend'
+```
+
+To prepare the plot, again create the 'ticks' for a 2 hour scale on the x axis and use 'rbing' to bring 'meanStepsPerIntervalNoNAwd' and 'meanStepsPerIntervalNoNAwe' into 'meanStepsPerIntervalNoNA'
+```{r}
+ticks <- meanStepsPerIntervalNoNAwd[seq(1, nrow(meanStepsPerIntervalNoNAwd), 24),][,1]
+meanStepsPerIntervalNoNA <- rbind(meanStepsPerIntervalNoNAwd, meanStepsPerIntervalNoNAwe)
+```
+
+And the create the plot with ggplot2 and facet.
+```{r}
+ggplot(data=meanStepsPerIntervalNoNA, aes(x=Group.1, y=x, group=1)) + geom_line() + scale_x_discrete(breaks = c(ticks)) + facet_grid(wDay ~ .)
 ```
