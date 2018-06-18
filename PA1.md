@@ -2,10 +2,9 @@
 title: 'Reproducible Research: Peer Assessment 1'
 author: 'Reto Omlin'
 date: 17. June 2018
-output:
+output: 
   html_document:
-    keep_md: yes
-    always_allow_html: yes
+    keep_md: true
 ---
 
 
